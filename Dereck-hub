@@ -1,0 +1,714 @@
+-- ═══════════════════════════════════════════════════════════
+--   DEREK HUB  ·  Murder Mystery 2   (v1.1 - corregido)
+--   Place: 142823291
+-- ═══════════════════════════════════════════════════════════
+
+local Players           = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService        = game:GetService("RunService")
+local TweenService      = game:GetService("TweenService")
+local UserInputService  = game:GetService("UserInputService")
+local Lighting          = game:GetService("Lighting")
+local VirtualUser       = game:GetService("VirtualUser")
+local TeleportService   = game:GetService("TeleportService")
+
+local LP = Players.LocalPlayer
+
+local CONFIG = {
+	Icon       = "",                                   -- rbxassetid://ID del icono. Vacío = logo "D"
+	Accent     = Color3.fromRGB(224, 32, 48),
+	Background = Color3.fromRGB(17, 17, 19),
+	Panel      = Color3.fromRGB(28, 28, 31),
+	PanelHi    = Color3.fromRGB(38, 38, 42),
+	Text       = Color3.fromRGB(238, 238, 240),
+	Muted      = Color3.fromRGB(145, 145, 150),
+}
+
+local function new(class, props, parent)
+	local o = Instance.new(class)
+	for k, v in pairs(props) do o[k] = v end
+	o.Parent = parent
+	return o
+end
+
+local function corner(inst, r)
+	new("UICorner", { CornerRadius = UDim.new(0, r) }, inst)
+end
+
+local function stroke(inst, color, thick, trans)
+	new("UIStroke", { Color = color, Thickness = thick, Transparency = trans or 0 }, inst)
+end
+
+local parentGui = (function()
+	local ok, cg = pcall(function() return game:GetService("CoreGui") end)
+	if ok and cg then
+		local old = cg:FindFirstChild("DerekHub")
+		if old then old:Destroy() end
+		return cg
+	end
+	return LP:WaitForChild("PlayerGui")
+end)
+
+-- ─────────────── GUI ───────────────
+local gui = new("ScreenGui", {
+	Name = "DerekHub",
+	ResetOnSpawn = false,
+	ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
+	DisplayOrder = 999,
+	IgnoreGuiInset = true,
+}, parentGui)
+
+local main = new("Frame", {
+	Size = UDim2.fromOffset(640, 372),
+	Position = UDim2.new(0.5, 0, 0.5, 0),
+	AnchorPoint = Vector2.new(0.5, 0.5),
+	BackgroundColor3 = CONFIG.Background,
+	BorderSizePixel = 0,
+	ZIndex = 2,
+}, gui)
+corner(main, 18)
+stroke(main, CONFIG.Accent, 1.5, 0.1)
+
+local outer = new("Frame", {
+	Size = UDim2.new(1, 12, 1, 12),
+	Position = UDim2.new(0.5, 0, 0.5, 0),
+	AnchorPoint = Vector2.new(0.5, 0.5),
+	BackgroundTransparency = 1,
+	ZIndex = 1,
+}, main)
+corner(outer, 22)
+stroke(outer, CONFIG.Accent, 1.5, 0.35)
+
+-- ─────────────── header ───────────────
+local header = new("Frame", {
+	Size = UDim2.new(1, 0, 0, 46),
+	BackgroundTransparency = 1,
+	ZIndex = 3,
+}, main)
+
+new("Frame", {
+	Size = UDim2.new(1, -24, 0, 1),
+	Position = UDim2.new(0, 12, 0, 46),
+	BackgroundColor3 = Color3.fromRGB(50, 50, 55),
+	BorderSizePixel = 0,
+	ZIndex = 3,
+}, main)
+
+local logoBox = new("Frame", {
+	Size = UDim2.fromOffset(32, 32),
+	Position = UDim2.fromOffset(12, 7),
+	BackgroundColor3 = CONFIG.Accent,
+	BorderSizePixel = 0,
+	ZIndex = 4,
+}, header)
+corner(logoBox, 8)
+
+if CONFIG.Icon ~= "" then
+	new("ImageLabel", {
+		Size = UDim2.new(1, 0, 1, 0),
+		BackgroundTransparency = 1,
+		Image = CONFIG.Icon,
+		ScaleType = Enum.ScaleType.Crop,
+		ZIndex = 5,
+	}, logoBox)
+else
+	new("TextLabel", {
+		Size = UDim2.new(1, 0, 1, 0),
+		BackgroundTransparency = 1,
+		Text = "D",
+		Font = Enum.Font.GothamBlack,
+		TextSize = 18,
+		TextColor3 = Color3.new(1, 1, 1),
+		ZIndex = 5,
+	}, logoBox)
+end
+
+new("TextLabel", {
+	Size = UDim2.new(1, -140, 0, 20),
+	Position = UDim2.fromOffset(54, 7),
+	BackgroundTransparency = 1,
+	Text = "Derek Hub",
+	Font = Enum.Font.GothamBold,
+	TextSize = 15,
+	TextColor3 = CONFIG.Text,
+	TextXAlignment = Enum.TextXAlignment.Center,
+	ZIndex = 4,
+}, header)
+
+new("TextLabel", {
+	Size = UDim2.new(1, -140, 0, 14),
+	Position = UDim2.fromOffset(54, 26),
+	BackgroundTransparency = 1,
+	Text = "Murder Mystery 2  ·  v1.1",
+	Font = Enum.Font.Gotham,
+	TextSize = 11,
+	TextColor3 = CONFIG.Muted,
+	TextXAlignment = Enum.TextXAlignment.Center,
+	ZIndex = 4,
+}, header)
+
+local minBtn = new("TextButton", {
+	Size = UDim2.fromOffset(24, 24),
+	Position = UDim2.new(1, -62, 0, 11),
+	BackgroundTransparency = 1,
+	Text = "—",
+	Font = Enum.Font.GothamBold,
+	TextSize = 14,
+	TextColor3 = CONFIG.Muted,
+	ZIndex = 4,
+}, header)
+
+local closeBtn = new("TextButton", {
+	Size = UDim2.fromOffset(24, 24),
+	Position = UDim2.new(1, -34, 0, 11),
+	BackgroundTransparency = 1,
+	Text = "✕",
+	Font = Enum.Font.GothamBold,
+	TextSize = 14,
+	TextColor3 = CONFIG.Muted,
+	ZIndex = 4,
+}, header)
+
+closeBtn.MouseButton1Click:Connect(function() gui:Destroy() end)
+
+-- ─────────────── layout ───────────────
+local sidebar = new("Frame", {
+	Size = UDim2.fromOffset(120, 300),
+	Position = UDim2.fromOffset(12, 56),
+	BackgroundTransparency = 1,
+	ZIndex = 3,
+}, main)
+
+local content = new("Frame", {
+	Size = UDim2.new(1, -152, 0, 292),
+	Position = UDim2.fromOffset(140, 60),
+	BackgroundTransparency = 1,
+	ZIndex = 3,
+}, main)
+
+new("TextLabel", {
+	Size = UDim2.new(1, 0, 0, 34),
+	BackgroundTransparency = 1,
+	Text = "DEREK HUB",
+	Font = Enum.Font.GothamBlack,
+	TextSize = 26,
+	TextColor3 = CONFIG.Text,
+	TextXAlignment = Enum.TextXAlignment.Left,
+	ZIndex = 4,
+}, content)
+
+local pageHolder = new("Frame", {
+	Size = UDim2.new(1, 0, 1, -44),
+	Position = UDim2.fromOffset(0, 44),
+	BackgroundTransparency = 1,
+	ZIndex = 4,
+}, content)
+
+-- ─────────────── helpers de control ───────────────
+local function makeSlider(parent, labelText, minV, maxV, defaultV, onChange)
+	local row = new("Frame", { Size = UDim2.new(1, 0, 0, 50), BackgroundTransparency = 1 }, parent)
+
+	new("TextLabel", {
+		Size = UDim2.new(1, -70, 0, 18),
+		BackgroundTransparency = 1,
+		Text = labelText,
+		Font = Enum.Font.GothamMedium,
+		TextSize = 14,
+		TextColor3 = CONFIG.Text,
+		TextXAlignment = Enum.TextXAlignment.Left,
+	}, row)
+
+	local track = new("Frame", {
+		Size = UDim2.new(1, -110, 0, 6),
+		Position = UDim2.fromOffset(0, 30),
+		BackgroundColor3 = Color3.fromRGB(58, 58, 63),
+		BorderSizePixel = 0,
+	}, row)
+	corner(track, 4)
+
+	local fill = new("Frame", { Size = UDim2.new(0, 0, 1, 0), BackgroundColor3 = CONFIG.Accent, BorderSizePixel = 0 }, track)
+	corner(fill, 4)
+
+	local knob = new("Frame", {
+		Size = UDim2.fromOffset(14, 14),
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.new(0, 0, 0.5, 0),
+		BackgroundColor3 = Color3.new(1, 1, 1),
+		BorderSizePixel = 0,
+	}, track)
+	corner(knob, 7)
+
+	local badge = new("Frame", {
+		Size = UDim2.fromOffset(26, 26),
+		Position = UDim2.new(1, -26, 0, 18),
+		BackgroundColor3 = CONFIG.Accent,
+		BorderSizePixel = 0,
+	}, row)
+	corner(badge, 13)
+
+	local badgeText = new("TextLabel", {
+		Size = UDim2.new(1, 0, 1, 0),
+		BackgroundTransparency = 1,
+		Text = tostring(defaultV),
+		Font = Enum.Font.GothamBold,
+		TextSize = 12,
+		TextColor3 = Color3.new(1, 1, 1),
+	}, badge)
+
+	local value = defaultV
+	local dragging = false
+
+	local function apply(alpha, fire)
+		alpha = math.clamp(alpha, 0, 1)
+		value = math.floor(minV + (maxV - minV) * alpha + 0.5)
+		fill.Size = UDim2.new(alpha, 0, 1, 0)
+		knob.Position = UDim2.new(alpha, 0, 0.5, 0)
+		badgeText.Text = tostring(value)
+		if fire then pcall(onChange, value) end
+	end
+
+	track.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1
+			or input.UserInputType == Enum.UserInputType.Touch then
+			dragging = true
+			apply((input.Position.X - track.AbsolutePosition.X) / track.AbsoluteSize.X, true)
+		end
+	end)
+
+	UserInputService.InputChanged:Connect(function(input)
+		if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement
+			or input.UserInputType == Enum.UserInputType.Touch) then
+			apply((input.Position.X - track.AbsolutePosition.X) / track.AbsoluteSize.X, true)
+		end
+	end)
+
+	UserInputService.InputEnded:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1
+			or input.UserInputType == Enum.UserInputType.Touch then
+			dragging = false
+		end
+	end)
+
+	apply((defaultV - minV) / (maxV - minV), false)
+	return row
+end
+
+local function makeToggle(parent, labelText, default, onChange)
+	local row = new("Frame", { Size = UDim2.new(1, 0, 0, 34), BackgroundTransparency = 1 }, parent)
+
+	new("TextLabel", {
+		Size = UDim2.new(1, -60, 0, 34),
+		BackgroundTransparency = 1,
+		Text = labelText,
+		Font = Enum.Font.GothamMedium,
+		TextSize = 14,
+		TextColor3 = CONFIG.Text,
+		TextXAlignment = Enum.TextXAlignment.Left,
+	}, row)
+
+	local btn = new("Frame", {
+		Size = UDim2.fromOffset(44, 22),
+		Position = UDim2.new(1, -44, 0.5, -11),
+		BackgroundColor3 = Color3.fromRGB(52, 52, 57),
+		BorderSizePixel = 0,
+	}, row)
+	corner(btn, 11)
+
+	local dot = new("Frame", {
+		Size = UDim2.fromOffset(16, 16),
+		Position = UDim2.fromOffset(3, 3),
+		BackgroundColor3 = Color3.fromRGB(200, 200, 205),
+		BorderSizePixel = 0,
+	}, btn)
+	corner(dot, 8)
+
+	local active = default
+
+	local function render(anim)
+		local goalPos = active and UDim2.new(1, -19, 0, 3) or UDim2.fromOffset(3, 3)
+		local goalCol = active and CONFIG.Accent or Color3.fromRGB(200, 200, 205)
+		if anim then
+			TweenService:Create(dot, TweenInfo.new(0.15), { Position = goalPos, BackgroundColor3 = goalCol }):Play()
+		else
+			dot.Position = goalPos
+			dot.BackgroundColor3 = goalCol
+		end
+	end
+
+	new("TextButton", {
+		Size = UDim2.new(1, 0, 1, 0),
+		BackgroundTransparency = 1,
+		Text = "",
+	}, btn).MouseButton1Click:Connect(function()
+		active = not active
+		render(true)
+		pcall(onChange, active)
+	end)
+
+	render(false)
+	return row
+end
+
+local function makeButton(parent, labelText, onClick)
+	local btn = new("TextButton", {
+		Size = UDim2.new(1, 0, 0, 30),
+		BackgroundColor3 = CONFIG.PanelHi,
+		Text = labelText,
+		Font = Enum.Font.GothamMedium,
+		TextSize = 13,
+		TextColor3 = CONFIG.Text,
+		BorderSizePixel = 0,
+	}, parent)
+	corner(btn, 8)
+	btn.MouseButton1Click:Connect(function() pcall(onClick) end)
+	return btn
+end
+
+-- ─────────────── pestañas ───────────────
+local tabs, pages = {}, {}
+
+local function createTab(id, icon, label, index)
+	local btn = new("TextButton", {
+		Size = UDim2.new(1, 0, 0, 56),
+		Position = UDim2.fromOffset(0, (index - 1) * 64),
+		BackgroundColor3 = CONFIG.Panel,
+		Text = "",
+		BorderSizePixel = 0,
+		ZIndex = 4,
+	}, sidebar)
+	corner(btn, 10)
+
+	new("TextLabel", {
+		Size = UDim2.new(1, 0, 0, 22),
+		Position = UDim2.fromOffset(0, 10),
+		BackgroundTransparency = 1,
+		Text = icon,
+		Font = Enum.Font.GothamBold,
+		TextSize = 16,
+		TextColor3 = CONFIG.Text,
+	}, btn)
+
+	new("TextLabel", {
+		Size = UDim2.new(1, 0, 0, 16),
+		Position = UDim2.fromOffset(0, 32),
+		BackgroundTransparency = 1,
+		Text = label,
+		Font = Enum.Font.Gotham,
+		TextSize = 12,
+		TextColor3 = CONFIG.Muted,
+	}, btn)
+
+	local page = new("Frame", {
+		Size = UDim2.new(1, 0, 1, 0),
+		BackgroundTransparency = 1,
+		Visible = false,
+		ZIndex = 4,
+	}, pageHolder)
+
+	-- ⬇ ESTO es lo que faltaba: apila los controles
+	new("UIListLayout", {
+		Padding = UDim.new(0, 6),
+		SortOrder = Enum.SortOrder.LayoutOrder,
+	}, page)
+	new("UIPadding", {
+		PaddingTop = UDim.new(0, 4),
+		PaddingRight = UDim.new(0, 6),
+	}, page)
+
+	tabs[id] = { btn = btn, page = page }
+	pages[id] = page
+
+	btn.MouseButton1Click:Connect(function()
+		for k, t in pairs(tabs) do
+			local on = (k == id)
+			t.page.Visible = on
+			t.btn.BackgroundColor3 = on and CONFIG.Accent or CONFIG.Panel
+		end
+	end)
+end
+
+createTab("player", "◉", "Jugador", 1)
+createTab("visual", "◎", "Visual", 2)
+createTab("auto", "⟳", "Auto", 3)
+createTab("misc", "◆", "Nocito", 4)
+
+-- ─────────────── estado ───────────────
+local state = {
+	walk = 16,
+	jump = 50,
+	noclip = false,
+	espMurderer = false,
+	espSheriff = false,
+	espCoins = false,
+	fullbright = false,
+	autoCoins = false,
+	autoKill = false,
+	antiafk = false,
+	infiniteJump = false,
+}
+
+local function hum()
+	local ch = LP.Character
+	return ch and ch:FindFirstChildOfClass("Humanoid")
+end
+
+local function applyMovement()
+	local h = hum()
+	if not h then return end
+	h.UseJumpPower = true
+	h.WalkSpeed = state.walk
+	h.JumpPower = state.jump
+end
+
+LP.CharacterAdded:Connect(function()
+	task.wait(0.6)
+	applyMovement()
+end)
+
+-- ─────────────── Jugador ───────────────
+makeSlider(pages.player, "WalkSpeed", 16, 200, 16, function(v)
+	state.walk = v
+	applyMovement()
+end)
+
+makeSlider(pages.player, "JumpPower", 50, 300, 50, function(v)
+	state.jump = v
+	applyMovement()
+end)
+
+makeToggle(pages.player, "NoClip", false, function(on) state.noclip = on end)
+
+-- ─────────────── Visual (ESP) ───────────────
+local COLORS = {
+	murderer = Color3.fromRGB(235, 45, 45),
+	sheriff  = Color3.fromRGB(60, 140, 255),
+	coin     = Color3.fromRGB(255, 200, 40),
+}
+
+local function highlight(inst, color)
+	local h = Instance.new("Highlight")
+	h.FillColor = color
+	h.FillTransparency = 0.55
+	h.OutlineColor = color
+	h.OutlineTransparency = 0
+	h.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+	h.Parent = inst
+	return h
+end
+
+-- busca el rol también en la mochila, no solo en el personaje
+local function roleOf(plr)
+	local list = {}
+	if plr.Character then
+		for _, t in pairs(plr.Character:GetChildren()) do table.insert(list, t) end
+	end
+	local bp = plr:FindFirstChildOfClass("Backpack")
+	if bp then
+		for _, t in pairs(bp:GetChildren()) do table.insert(list, t) end
+	end
+	for _, t in pairs(list) do
+		if t:IsA("Tool") then
+			if t.Name == "Knife" then return "murderer" end
+			if t.Name == "Gun" then return "sheriff" end
+		end
+	end
+	return nil
+end
+
+local espPlayers, espCoins = {}, {}
+
+local function clearTbl(t)
+	for k, h in pairs(t) do
+		if h then h:Destroy() end
+		t[k] = nil
+	end
+end
+
+task.spawn(function()
+	while gui.Parent do
+		for _, plr in pairs(Players:GetPlayers()) do
+			if plr ~= LP then
+				local ch = plr.Character
+				local role = roleOf(plr)
+				local want = ch and ((role == "murderer" and state.espMurderer)
+					or (role == "sheriff" and state.espSheriff))
+				if want then
+					if not espPlayers[ch] then espPlayers[ch] = highlight(ch, COLORS[role]) end
+				elseif ch and espPlayers[ch] then
+					espPlayers[ch]:Destroy()
+					espPlayers[ch] = nil
+				end
+			end
+		end
+		for inst, h in pairs(espPlayers) do
+			if not inst.Parent then h:Destroy(); espPlayers[inst] = nil end
+		end
+
+		if state.espCoins then
+			for _, d in pairs(workspace:GetDescendants()) do
+				if d.Name == "Coin" and not espCoins[d]
+					and (d:IsA("BasePart") or d:IsA("Model")) then
+					espCoins[d] = highlight(d, COLORS.coin)
+				end
+			end
+			for inst, h in pairs(espCoins) do
+				if not inst.Parent then h:Destroy(); espCoins[inst] = nil end
+			end
+		elseif next(espCoins) then
+			clearTbl(espCoins)
+		end
+
+		task.wait(0.5)
+	end
+end)
+
+makeToggle(pages.visual, "ESP Asesino", false, function(on) state.espMurderer = on end)
+makeToggle(pages.visual, "ESP Sheriff", false, function(on) state.espSheriff = on end)
+makeToggle(pages.visual, "ESP Monedas", false, function(on) state.espCoins = on end)
+makeToggle(pages.visual, "Fullbright", false, function(on)
+	state.fullbright = on
+	Lighting.Brightness = on and 3 or 2
+	Lighting.GlobalShadows = not on
+	Lighting.FogEnd = on and 1e6 or 1000
+end)
+
+-- ─────────────── Auto ───────────────
+local coinRemote
+task.spawn(function()
+	for _, d in pairs(ReplicatedStorage:GetDescendants()) do
+		if d:IsA("RemoteEvent") and string.find(string.lower(d.Name), "coin") then
+			coinRemote = d
+			break
+		end
+	end
+end)
+
+task.spawn(function()
+	while gui.Parent do
+		if state.autoCoins then
+			for _, d in pairs(workspace:GetDescendants()) do
+				if d.Name == "Coin" then
+					if coinRemote then
+						pcall(function() coinRemote:FireServer(d) end)
+					else
+						local prompt = d:FindFirstChildOfClass("ProximityPrompt", true)
+						if prompt then pcall(function() prompt:InputHoldBegin() end) end
+					end
+				end
+			end
+		end
+		task.wait(0.25)
+	end
+end)
+
+task.spawn(function()
+	while gui.Parent do
+		if state.autoKill then
+			local ch = LP.Character
+			local tool = ch and ch:FindFirstChildOfClass("Tool")
+			if tool and tool.Name == "Knife" then
+				local root = ch:FindFirstChild("HumanoidRootPart")
+				if root then
+					local best, dist = nil, 14
+					for _, plr in pairs(Players:GetPlayers()) do
+						if plr ~= LP and plr.Character then
+							local r = plr.Character:FindFirstChild("HumanoidRootPart")
+							local h = plr.Character:FindFirstChildOfClass("Humanoid")
+							if r and h and h.Health > 0 then
+								local d = (r.Position - root.Position).Magnitude
+								if d < dist then best, dist = plr, d end
+							end
+						end
+					end
+					if best then pcall(function() tool:Activate() end) end
+				end
+			end
+		end
+		task.wait(0.1)
+	end
+end)
+
+makeToggle(pages.auto, "Auto Monedas", false, function(on) state.autoCoins = on end)
+makeToggle(pages.auto, "Auto Matar (con cuchillo)", false, function(on) state.autoKill = on end)
+
+-- ─────────────── Nocito ───────────────
+makeToggle(pages.misc, "Anti-AFK", false, function(on) state.antiafk = on end)
+makeToggle(pages.misc, "Salto Infinito", false, function(on) state.infiniteJump = on end)
+
+makeButton(pages.misc, "Reiniciar personaje", function()
+	local h = hum()
+	if h then h:TakeDamage(math.huge) end
+end)
+makeButton(pages.misc, "Rejoin", function()
+	TeleportService:Teleport(game.PlaceId, LP)
+end)
+makeButton(pages.misc, "Server Hop", function()
+	TeleportService:Teleport(game.PlaceId)
+end)
+
+-- ─────────────── loops globales ───────────────
+RunService.Stepped:Connect(function()
+	if state.noclip then
+		local ch = LP.Character
+		if ch then
+			for _, p in pairs(ch:GetDescendants()) do
+				if p:IsA("BasePart") and p.CanCollide then p.CanCollide = false end
+			end
+		end
+	end
+end)
+
+UserInputService.JumpRequest:Connect(function()
+	if state.infiniteJump then
+		local h = hum()
+		if h then h:ChangeState(Enum.HumanoidStateType.Jumping) end
+	end
+end)
+
+LP.Idled:Connect(function()
+	if state.antiafk then
+		VirtualUser:CaptureController()
+		VirtualUser:ClickButton2(Vector2.new())
+	end
+end)
+
+-- ─────────────── drag + minimizar ───────────────
+local dragging, dragStart, startPos
+
+header.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1
+		or input.UserInputType == Enum.UserInputType.Touch then
+		dragging = true
+		dragStart = input.Position
+		startPos = main.Position
+	end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+	if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement
+		or input.UserInputType == Enum.UserInputType.Touch) then
+		local delta = input.Position - dragStart
+		main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X,
+			startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+	end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1
+		or input.UserInputType == Enum.UserInputType.Touch then
+		dragging = false
+	end
+end)
+
+local minimized = false
+minBtn.MouseButton1Click:Connect(function()
+	minimized = not minimized
+	sidebar.Visible = not minimized
+	content.Visible = not minimized
+	main.Size = minimized and UDim2.fromOffset(640, 46) or UDim2.fromOffset(640, 372)
+end)
+
+-- ─────────────── inicio ───────────────
+tabs.player.btn.BackgroundColor3 = CONFIG.Accent
+pages.player.Visible = true
+applyMovement()
